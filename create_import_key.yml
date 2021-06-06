@@ -1,0 +1,49 @@
+---
+- name: Creating SSH key and importing to multiple locations
+  hosts: localhost
+  vars_files:
+    - credentials.vars
+  tasks:
+
+    - name: "Pre-setup: PIP dependency task"
+      yum:
+       name: python-pip
+       state: present
+
+    - name: "Pre-setup: PIP setuptools task"
+      pip:
+       name: setuptools
+       state: present
+
+    - name: "Pre-setup: PIP virtualenv task"
+      pip:
+       name: virtualenv
+       state: present
+
+    - name: "Pre-setup: PIP boto task for AWS module"
+      pip:
+       name: boto3
+       state: present
+
+    - name: "Pre-setup: PIP botocore for AWS module"
+      pip:
+       name: botocore
+       state: present
+
+    - name: "Generating new SSH key pair"
+      run_once: True
+      community.crypto.openssh_keypair:
+       path: "{{ key_name }}"
+       type: rsa
+       size: 4096
+       state: present
+   
+    - name: "Importing key pair to requested AWS regions"
+      amazon.aws.ec2_key:
+       aws_access_key: "{{ access_key }}"
+       aws_secret_key: "{{ secret_key }}"
+       region: "{{ item }}"
+       name: "{{ key_name }}"
+       key_material: "{{ lookup('file', './{{ key_name }}.pub') }}"
+       state: present
+      with_items: "{{ regions }}"

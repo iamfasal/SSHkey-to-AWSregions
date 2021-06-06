@@ -1,0 +1,16 @@
+---
+- name: Removing a specific SSH key from AWS regions"
+  hosts: localhost
+  vars_files:
+   - credentials.vars
+
+  tasks:
+   - name: "Removing SSH key {{ key_name }} from AWS regions"
+     amazon.aws.ec2_key:
+      name: "{{ key_name }}"
+      aws_access_key: "{{ access_key }}"
+      aws_secret_key: "{{ secret_key }}"
+      region: "{{ item }}"
+      state: absent
+     
+     with_items: "{{ regions }}" 
